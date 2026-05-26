@@ -5,6 +5,7 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
+    base: "/industry-week-senai-prj/",
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {

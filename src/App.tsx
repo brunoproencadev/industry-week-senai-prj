@@ -17,11 +17,11 @@ gsap.registerPlugin(ScrollTrigger);
  * ───────────────────────────────────────────────────────────────────────── */
 
 const SECTION_MEDIA = {
-  hero: { day: "public/background-light.mp4", night: "public/background-dark.mp4" },
-  rev1: { day: "public/1revday.mp4", night: "public/1revnight.mp4" },
-  rev2: { day: "public/2rev.mp4", night: "public/2revnight.mp4" },
-  rev3: { day: "public/3revday.mp4", night: "public/3revnight.mp4" },
-  rev4: { day: "public/4rev.mp4", night: "public/4revnight.mp4" },
+  hero: { day: `${import.meta.env.BASE_URL}background-light.mp4`, night: `${import.meta.env.BASE_URL}background-dark.mp4` },
+  rev1: { day: `${import.meta.env.BASE_URL}1revday.mp4`, night: `${import.meta.env.BASE_URL}1revnight.mp4` },
+  rev2: { day: `${import.meta.env.BASE_URL}2rev.mp4`, night: `${import.meta.env.BASE_URL}2revnight.mp4` },
+  rev3: { day: `${import.meta.env.BASE_URL}3revday.mp4`, night: `${import.meta.env.BASE_URL}3revnight.mp4` },
+  rev4: { day: `${import.meta.env.BASE_URL}4rev.mp4`, night: `${import.meta.env.BASE_URL}4revnight.mp4` },
 } as const;
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -623,7 +623,7 @@ export default function App() {
         {/* revs.gif background — same asset for both day and night */}
         <div className="section-bg">
           <img
-            src="/revs.gif"
+            src={`${import.meta.env.BASE_URL}revs.gif`}
             alt=""
             aria-hidden="true"
             style={{
