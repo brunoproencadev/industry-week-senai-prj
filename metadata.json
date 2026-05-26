@@ -1,0 +1,6 @@
+{
+  "name": "As Revoluções Industriais e o SENAI Sorocaba",
+  "description": "Uma experiência cinematográfica interativa detalhando as quatro Revoluções Industriais e a história de contribuição tecnológica do SENAI Sorocaba.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
