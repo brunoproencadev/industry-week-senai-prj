@@ -2,25 +2,17 @@
 @import "tailwindcss";
 
 :root {
-  -pull-easing: cubic-bezier(0.32, 0, 0.67, 0);
-  -return-easing: cubic-bezier(0.175, 0.885, 0.32, 1.4);
-  -active-toggle: #f5f8ea;
-  --pull-easing: cubic-bezier(0.32, 0, 0.67, 0);
+  /* Physics easing curves — consumed by React inline styles on hero bg videos.
+   * Pull-down animation is applied via JS (not a CSS class) so that
+   * CSS !important never conflicts with per-video opacity values. */
+  --pull-easing:   cubic-bezier(0.32, 0, 0.67, 0);
   --return-easing: cubic-bezier(0.175, 0.885, 0.32, 1.4);
   --active-toggle: #f5f8ea;
 }
 
-.bg-front {
-  transition: transform 0.5s var(--return-easing), opacity 0.5s ease;
-  transition: transform 0.5s var(-return-easing), opacity 0.5s ease;
-}
-
-.pull-down {
-  transform: translateY(20vh) scale(1.1) !important;
-  opacity: 0.8 !important;
-  transition: transform 0.3s var(--pull-easing), opacity 0.3s ease !important;
-  transition: transform 0.3s var(-pull-easing), opacity 0.3s ease !important;
-}
+/* .bg-front and .pull-down removed — pull-down physics is now handled
+ * entirely via React inline styles (see pullTransform in App.tsx) to
+ * avoid CSS !important overriding per-video opacity during toggle. */
 
 @theme {
   --font-heading: 'Instrument Serif', serif;
@@ -197,14 +189,23 @@ html {
   overflow: hidden;
 }
 
-/* Absolute background media container */
+/* Absolute background media container.
+ * NOTE: isolation: isolate creates a new stacking context so that
+ * child z-index values (set via React inline styles) are respected.
+ */
 .section-bg {
   position: absolute;
   inset: 0;
   z-index: 1;
+  background-color: #000;  /* Fallback while media loads */
+  isolation: isolate;      /* Establishes stacking context for child z-index values */
 }
 
-/* Normalize video and image media inside section-bg */
+/* Normalize video and image media inside section-bg.
+ * z-index is driven dynamically via React inline styles (isDayMode toggle).
+ * The active media gets z-index:2, inactive gets z-index:1.
+ * The overlay gets z-index:3 to always sit above both media layers.
+ */
 .section-bg video,
 .section-bg img {
   position: absolute;
@@ -367,4 +368,279 @@ html {
   display: block;
 }
 
+/* ══════════════════════════════════════════════════════════════════
+ * MINIMALIST TOP-RIGHT NAVIGATION
+ * Sleek vertical dot-list nav fixed to viewport top-right.
+ * Labels reveal on hover via slide-in animation.
+ * ══════════════════════════════════════════════════════════════════ */
 
+/* List container — vertical stack, right-aligned */
+.site-nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+/* Hide vertical nav on small screens — show only hamburger */
+@media (max-width: 1023px) {
+  .site-nav-list {
+    display: none;
+  }
+}
+
+.site-nav-item {
+  list-style: none;
+}
+
+/* Each nav link: dot + label, right-to-left layout */
+.site-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-direction: row-reverse;   /* dot on the right, label slides in from the right */
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.35);
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 4px 0;
+  transition: color 0.25s ease, gap 0.25s ease;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.site-nav-link:hover {
+  color: rgba(255, 255, 255, 0.9);
+  gap: 12px;
+}
+
+/* Active state */
+.site-nav-link--active {
+  color: rgba(255, 255, 255, 1);
+}
+
+/* Day mode variants */
+.site-nav-link--day {
+  color: rgba(0, 0, 0, 0.3);
+}
+
+.site-nav-link--day:hover {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.site-nav-link--day.site-nav-link--active {
+  color: rgba(0, 0, 0, 1);
+}
+
+/* The indicator dot */
+.site-nav-dot {
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background: currentColor;
+  flex-shrink: 0;
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.4),
+              opacity 0.25s ease;
+  opacity: 0.5;
+}
+
+.site-nav-link:hover .site-nav-dot {
+  transform: scale(1.6);
+  opacity: 1;
+}
+
+.site-nav-link--active .site-nav-dot {
+  transform: scale(1.4);
+  opacity: 1;
+  box-shadow: 0 0 6px currentColor;
+}
+
+/* Portal link special dot */
+.site-nav-dot--portal {
+  background: #3b82f6;
+  opacity: 1;
+}
+
+.site-nav-link--portal {
+  color: rgba(59, 130, 246, 0.7);
+}
+
+.site-nav-link--portal:hover {
+  color: rgba(59, 130, 246, 1);
+}
+
+.site-nav-link--portal.site-nav-link--day {
+  color: rgba(37, 99, 235, 0.6);
+}
+
+.site-nav-link--portal.site-nav-link--day:hover {
+  color: rgba(37, 99, 235, 1);
+}
+
+/* Label text — slide in from the right on hover / active */
+.site-nav-label {
+  display: inline-block;
+  transition: opacity 0.2s ease, transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.4);
+  opacity: 0;
+  transform: translateX(6px);
+  pointer-events: none;
+}
+
+.site-nav-link:hover .site-nav-label,
+.site-nav-link--active .site-nav-label {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+ * HORIZONTAL PILL NAV BAR
+ * Dark capsule centered at top of viewport — image-1 reference style.
+ * Active section label (left pill) · flat links (middle) · CTA (right).
+ * Hidden on < md (mobile uses the hamburger instead).
+ * ══════════════════════════════════════════════════════════════════ */
+
+.h-nav-bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  background: rgba(8, 8, 8, 0.88);
+  backdrop-filter: blur(24px) saturate(1.6);
+  -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  white-space: nowrap;
+}
+
+/* Hide horizontal bar on small screens; show hamburger instead */
+@media (max-width: 767px) {
+  .h-nav-bar { display: none; }
+}
+
+/* Day-mode variant */
+.h-nav-bar--day {
+  background: rgba(238, 235, 228, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* ── Active section indicator — left pill ────────────────────── */
+.h-nav-active {
+  padding: 5px 14px;
+  background: rgba(32, 32, 32, 1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #ffffff;
+  pointer-events: none;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.h-nav-active--day {
+  background: rgba(15, 15, 15, 1);
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  color: #ffffff;
+}
+
+/* ── Vertical divider ────────────────────────────────────────── */
+.h-nav-divider {
+  width: 1px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.12);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+.h-nav-bar--day .h-nav-divider {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* ── Flat nav links ──────────────────────────────────────────── */
+.h-nav-link {
+  padding: 5px 13px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.38);
+  text-decoration: none;
+  border-radius: 9999px;
+  transition: color 0.22s ease, background 0.22s ease;
+  cursor: pointer;
+}
+
+.h-nav-link:hover {
+  color: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.h-nav-link--active {
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Day-mode flat links */
+.h-nav-link--day {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+.h-nav-link--day:hover,
+.h-nav-link--day.h-nav-link--active {
+  color: rgba(0, 0, 0, 0.82);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* ── Portal SENAI CTA — blue pill ───────────────────────────── */
+.h-nav-portal {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 14px;
+  background: #2563eb;
+  border-radius: 9999px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #ffffff;
+  text-decoration: none;
+  transition: background 0.22s ease, transform 0.2s ease;
+  margin-left: 2px;
+  flex-shrink: 0;
+}
+
+.h-nav-portal:hover {
+  background: #1d4ed8;
+  transform: scale(1.03);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+ * TIMELINE — Day-mode colour overrides
+ * Default (dark) timeline dot/line is white-based; these variants
+ * flip them to dark so they read correctly over the revs.gif in
+ * light mode.
+ * ══════════════════════════════════════════════════════════════════ */
+
+.timeline-dot--day {
+  background: rgba(30, 30, 30, 0.65);
+  box-shadow: 0 0 10px rgba(30, 30, 30, 0.15);
+}
+
+.timeline-line--day {
+  background: linear-gradient(to bottom, rgba(30, 30, 30, 0.22), transparent);
+}
